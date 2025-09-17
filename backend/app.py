@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from .db.database import engine, Base, AsyncSessionLocal
 from .core.config import settings
-from .controllers import usuarios_controller
+from .controllers import usuarios_controller, paciente_controller, auth_controller
 
 
 @asynccontextmanager
@@ -45,4 +45,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan, openapi_url="/uc-admin/openapi.json", docs_url="/uc-admin/docs")
 
+app.include_router(auth_controller.router, prefix="/uc-admin")
 app.include_router(usuarios_controller.router, prefix="/uc-admin")
+app.include_router(paciente_controller.router, prefix="/uc-admin")
