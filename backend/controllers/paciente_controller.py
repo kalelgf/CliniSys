@@ -41,6 +41,24 @@ async def criar_paciente(
         ) from e
 
 
+@router.post("/publico", status_code=status.HTTP_201_CREATED, response_model=dict)
+async def criar_paciente_publico(
+    payload: PacienteCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Endpoint público para cadastro de pacientes (fins educacionais)."""
+    try:
+        paciente = await create_patient(db, payload)
+        return envelope(True, Paciente.model_validate(paciente).model_dump())
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno do servidor: {str(e)}"
+        ) from e
+
+
 @router.get("/fila-triagem", response_model=dict)
 async def listar_fila_triagem(
     db: AsyncSession = Depends(get_db),
