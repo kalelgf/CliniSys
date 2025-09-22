@@ -55,6 +55,42 @@ class CliniSysMain:
         # Frame dos botões
         botoes_frame = ttk.Frame(main_frame)
         botoes_frame.pack(fill="x", pady=20)
+
+        # Botão Gerenciamento de Usuários
+        btn_usuarios = ttk.Button(
+            botoes_frame,
+            text="👥 Gerenciamento de Usuários",
+            command=self._abrir_usuarios,
+            style="Action.TButton"
+        )
+        btn_usuarios.pack(fill="x", pady=5, ipady=10)
+
+        # Botão Recepção
+        btn_recepcao = ttk.Button(
+            botoes_frame,
+            text="🏥 Recepção - Cadastro de Pacientes",
+            command=self._abrir_recepcao,
+            style="Action.TButton"
+        )
+        btn_recepcao.pack(fill="x", pady=5, ipady=10)
+
+        # Botão Fila de Triagem / Visualizar Pacientes
+        btn_fila_triagem = ttk.Button(
+            botoes_frame,
+            text="👁️ Consultar Fila de Triagem",
+            command=self._abrir_fila_triagem,
+            style="Action.TButton"
+        )
+        btn_fila_triagem.pack(fill="x", pady=5, ipady=10)
+
+        # Botão Sair
+        btn_sair = ttk.Button(
+            botoes_frame,
+            text="❌ Sair",
+            command=self._sair,
+            style="Secondary.TButton"
+        )
+        btn_sair.pack(fill="x", pady=(20, 5), ipady=10)
         
         # Botão Gerenciamento de Usuários
         btn_usuarios = ttk.Button(
@@ -64,6 +100,17 @@ class CliniSysMain:
             style="Action.TButton"
         )
         btn_usuarios.pack(fill="x", pady=5, ipady=10)
+    def _abrir_fila_triagem(self):
+        """Abre a tela de visualização da fila de triagem e pacientes cadastrados."""
+        try:
+            from desktop.visualizar_fila_triagem import TelaVisualizarFilaTriagem
+            fila_window = tk.Toplevel(self.root)
+            TelaVisualizarFilaTriagem(fila_window)
+        except Exception as e:
+            messagebox.showerror(
+                "Erro",
+                f"Erro ao abrir Fila de Triagem/Pacientes:\n{str(e)}"
+            )
         
         # Botão Recepção
         btn_recepcao = ttk.Button(
