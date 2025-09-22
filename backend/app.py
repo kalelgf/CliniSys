@@ -1,50 +1,42 @@
-from __future__ import annotations
+"""
+CliniSys Backend - FastAPI Application
+Este arquivo é para execução opcional da API web (já descontinuada).
+Para uso desktop, execute main.py na raiz do projeto.
+"""
 
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
+import uvicorn
 
-from .db.database import engine, Base, AsyncSessionLocal
-from .core.config import settings
-from .controllers import usuarios_controller, paciente_controller, auth_controller
+# Aplicação FastAPI simples
+app = FastAPI(
+    title="CliniSys API", 
+    description="Sistema de Gestão Hospitalar - API",
+    version="1.0.0"
+)
 
+@app.get("/")
+async def root():
+    """Endpoint raiz da API."""
+    return {
+        "message": "CliniSys API está funcionando!",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "note": "Para uso desktop, execute main.py na raiz do projeto"
+    }
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # cria tabelas
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    # cria admin se não existir
-    from .services.usuario_service import get_user_by_email, create_user
-    from .models import PerfilUsuario
-    async with AsyncSessionLocal() as session:
-        # tenta achar pelo email configurado primeiro
-        existing = await get_user_by_email(session, settings.admin_email)
-        if not existing:
-            # procura qualquer admin
-            from sqlalchemy import select
-            from .models import UsuarioSistema
-            res = await session.execute(select(UsuarioSistema).where(UsuarioSistema.perfil == PerfilUsuario.admin))
-            admin_user = res.scalar_one_or_none()
-            if admin_user:
-                # corrige email inválido rapidamente (sem ponto no domínio) atualizando para o email admin configurado
-                if "@" in admin_user.email and "." not in admin_user.email.split("@")[-1]:
-                    admin_user.email = settings.admin_email
-                    await session.commit()
-                # caso contrário, mantenha o admin existente válido
-            else:
-                # quando nenhum admin existe, cria um
-                await create_user(
-                    session,
-                    nome="Administrador",
-                    email=settings.admin_email,
-                    senha=settings.admin_password,
-                    perfil=PerfilUsuario.admin,
-                )
-    yield
+@app.get("/health")
+async def health_check():
+    """Endpoint de health check."""
+    return {"status": "healthy", "service": "CliniSys API"}
 
-
-app = FastAPI(title=settings.app_name, lifespan=lifespan, openapi_url="/uc-admin/openapi.json", docs_url="/uc-admin/docs")
-
-app.include_router(auth_controller.router, prefix="/uc-admin")
-app.include_router(usuarios_controller.router, prefix="/uc-admin")
-app.include_router(paciente_controller.router, prefix="/uc-admin")
+if __name__ == "__main__":
+    print("🚀 Iniciando CliniSys API...")
+    print("📖 Documentação disponível em: http://localhost:8000/docs")
+    print("💡 Para usar o sistema desktop, execute main.py na raiz do projeto")
+    
+    uvicorn.run(
+        "app:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True
+    )

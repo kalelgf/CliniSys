@@ -36,11 +36,19 @@ __pycache__/
 # Evita enviar o banco de dados de teste/desenvolvimento
 *.db
 *.sqlite3
+*.db-shm
+*.db-wal
 
 # Arquivos de log e de ambiente
 # Logs e variáveis de ambiente não devem ser versionados
 *.log
 .env
+
+# Arquivos de teste e debug temporários
+test_*.py
+debug_*.py
+check_*.py
+verify_*.py
 
 # Relatórios de testes e cobertura
 .pytest_cache/
