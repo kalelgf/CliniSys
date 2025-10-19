@@ -22,11 +22,21 @@ class Atendimento(Base):
     tipo: Mapped[str] = mapped_column(String(100), nullable=False)
     
     # Relacionamentos
-    aluno_id: Mapped[int] = mapped_column(Integer, ForeignKey("alunos.id"), nullable=False)
-    aluno: Mapped["Aluno"] = relationship("Aluno", back_populates="atendimentos")
+    # Permitir NULL quando aluno for excluído (SET NULL)
+    aluno_id: Mapped[int | None] = mapped_column(
+        Integer, 
+        ForeignKey("alunos.id", ondelete="SET NULL"), 
+        nullable=True
+    )
+    aluno: Mapped["Aluno | None"] = relationship("Aluno", back_populates="atendimentos")
     
-    paciente_id: Mapped[int] = mapped_column(Integer, ForeignKey("pacientes.id"), nullable=False)
-    paciente: Mapped["Paciente"] = relationship("Paciente", back_populates="atendimentos")
+    # Permitir NULL quando paciente for excluído (SET NULL)
+    paciente_id: Mapped[int | None] = mapped_column(
+        Integer, 
+        ForeignKey("pacientes.id", ondelete="SET NULL"), 
+        nullable=True
+    )
+    paciente: Mapped["Paciente | None"] = relationship("Paciente", back_populates="atendimentos")
     
     def __repr__(self):
         return f"<Atendimento(id={self.id}, tipo='{self.tipo}', status='{self.status}')>"

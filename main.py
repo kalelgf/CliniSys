@@ -83,44 +83,15 @@ class CliniSysMain:
         )
         btn_fila_triagem.pack(fill="x", pady=5, ipady=10)
 
-        # Botão Sair
-        btn_sair = ttk.Button(
+        # Botão Módulo do Aluno (Agendamento)
+        btn_aluno = ttk.Button(
             botoes_frame,
-            text="❌ Sair",
-            command=self._sair,
-            style="Secondary.TButton"
-        )
-        btn_sair.pack(fill="x", pady=(20, 5), ipady=10)
-        
-        # Botão Gerenciamento de Usuários
-        btn_usuarios = ttk.Button(
-            botoes_frame,
-            text="👥 Gerenciamento de Usuários",
-            command=self._abrir_usuarios,
+            text="👨‍⚕️ Módulo do Aluno - Agendamentos",
+            command=self._abrir_modulo_aluno,
             style="Action.TButton"
         )
-        btn_usuarios.pack(fill="x", pady=5, ipady=10)
-    def _abrir_fila_triagem(self):
-        """Abre a tela de visualização da fila de triagem e pacientes cadastrados."""
-        try:
-            from desktop.visualizar_fila_triagem import TelaVisualizarFilaTriagem
-            fila_window = tk.Toplevel(self.root)
-            TelaVisualizarFilaTriagem(fila_window)
-        except Exception as e:
-            messagebox.showerror(
-                "Erro",
-                f"Erro ao abrir Fila de Triagem/Pacientes:\n{str(e)}"
-            )
-        
-        # Botão Recepção
-        btn_recepcao = ttk.Button(
-            botoes_frame,
-            text="🏥 Recepção - Cadastro de Pacientes",
-            command=self._abrir_recepcao,
-            style="Action.TButton"
-        )
-        btn_recepcao.pack(fill="x", pady=5, ipady=10)
-        
+        btn_aluno.pack(fill="x", pady=5, ipady=10)
+
         # Botão Sair
         btn_sair = ttk.Button(
             botoes_frame,
@@ -178,6 +149,37 @@ class CliniSysMain:
             messagebox.showerror(
                 "Erro",
                 f"Erro ao abrir Recepção:\n{str(e)}"
+            )
+    
+    def _abrir_fila_triagem(self):
+        """Abre a tela de visualização da fila de triagem e pacientes cadastrados."""
+        try:
+            from desktop.visualizar_fila_triagem import TelaVisualizarFilaTriagem
+            fila_window = tk.Toplevel(self.root)
+            TelaVisualizarFilaTriagem(fila_window)
+        except Exception as e:
+            messagebox.showerror(
+                "Erro",
+                f"Erro ao abrir Fila de Triagem/Pacientes:\n{str(e)}"
+            )
+    
+    def _abrir_modulo_aluno(self):
+        """Abre o módulo do aluno para agendamentos."""
+        try:
+            from desktop.tela_aluno import TelaAluno
+            
+            # ID fixo do aluno para teste (você pode alterar conforme necessário)
+            # TODO: Implementar sistema de login para obter o aluno autenticado
+            aluno_id = 2  # matues gomes
+            aluno_nome = "Mateus Gomes"
+            
+            # Abrir tela do aluno
+            TelaAluno(self.root, aluno_id, aluno_nome)
+            
+        except Exception as e:
+            messagebox.showerror(
+                "Erro",
+                f"Erro ao abrir Módulo do Aluno:\n{str(e)}"
             )
     
     def _sair(self):

@@ -12,7 +12,7 @@ from ..models.usuario import UsuarioSistema
 async def create_tables():
     """Cria as tabelas do banco de dados."""
     # Importar todos os modelos para garantir que estejam registrados
-    from ..models import usuario
+    from ..models import usuario, paciente, atendimento, clinica, departamento, procedimento, prontuario, administrador, recepcionista, professor, aluno
     
     async with engine.begin() as conn:
         # Criar todas as tabelas baseadas nos modelos
