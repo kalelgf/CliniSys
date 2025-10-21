@@ -281,7 +281,8 @@ class TelaAgendarAtendimento:
     def _carregar_horarios(self, data_str: str):
         """Carrega horários disponíveis via Controller."""
         try:
-            resultado = AgendamentoController.listar_horarios_disponiveis(data_str)
+            # Passar o aluno_id para filtrar horários já ocupados
+            resultado = AgendamentoController.listar_horarios_disponiveis(data_str, self.aluno_id)
             
             if resultado["success"]:
                 horarios = resultado["data"]

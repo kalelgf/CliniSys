@@ -53,6 +53,89 @@ class ConsultaRepository:
         return count == 0
 
     @staticmethod
+    async def verificar_conflito_detalhado(
+        db: AsyncSession,
+        aluno_id: int,
+        paciente_id: int,
+        data_hora: datetime
+    ) -> dict:
+        """
+        Verifica conflitos de horário e retorna informações detalhadas.
+        
+        Returns:
+            dict com:
+                - disponivel: bool
+                - conflito_aluno: bool
+                - conflito_paciente: bool
+                - mensagem: str (descrição do conflito)
+        """
+        # Verificar conflito do aluno
+        stmt_aluno = select(func.count(Atendimento.id)).where(
+            and_(
+                Atendimento.dataHora == data_hora,
+                Atendimento.aluno_id == aluno_id
+            )
+        )
+        result_aluno = await db.execute(stmt_aluno)
+        conflito_aluno = result_aluno.scalar() > 0
+        
+        # Verificar conflito do paciente
+        stmt_paciente = select(func.count(Atendimento.id)).where(
+            and_(
+                Atendimento.dataHora == data_hora,
+                Atendimento.paciente_id == paciente_id
+            )
+        )
+        result_paciente = await db.execute(stmt_paciente)
+        conflito_paciente = result_paciente.scalar() > 0
+        
+        # Montar mensagem
+        mensagem = ""
+        if conflito_aluno and conflito_paciente:
+            mensagem = "Conflito de agenda: O aluno e o paciente já possuem atendimentos agendados neste horário."
+        elif conflito_aluno:
+            mensagem = "Conflito de agenda: O aluno já possui um atendimento agendado neste horário."
+        elif conflito_paciente:
+            mensagem = "Conflito de agenda: O paciente já possui um atendimento agendado neste horário."
+        else:
+            mensagem = "Horário disponível."
+        
+        return {
+            "disponivel": not (conflito_aluno or conflito_paciente),
+            "conflito_aluno": conflito_aluno,
+            "conflito_paciente": conflito_paciente,
+            "mensagem": mensagem
+        }
+
+    @staticmethod
+    async def listar_horarios_ocupados_por_aluno(
+        db: AsyncSession,
+        aluno_id: int,
+        data: datetime
+    ) -> list[datetime]:
+        """
+        Lista todos os horários já ocupados por um aluno em uma data específica.
+        
+        Returns:
+            Lista de objetos datetime com os horários ocupados
+        """
+        from sqlalchemy import func, cast, Date
+        
+        data_apenas = data.date()
+        
+        stmt = select(Atendimento.dataHora).where(
+            and_(
+                Atendimento.aluno_id == aluno_id,
+                func.date(Atendimento.dataHora) == data_apenas
+            )
+        )
+        
+        result = await db.execute(stmt)
+        horarios = result.scalars().all()
+        
+        return list(horarios)
+
+    @staticmethod
     async def salvar(db: AsyncSession, atendimento: Atendimento) -> Atendimento:
         """
         Salva um novo atendimento no banco de dados.
@@ -156,6 +239,27 @@ def verificar_disponibilidade_sync(
     return loop.run_until_complete(_async_wrapper())
 
 
+def verificar_conflito_detalhado_sync(
+    aluno_id: int,
+    paciente_id: int,
+    data_hora: datetime
+) -> dict:
+    """Versão síncrona de verificar_conflito_detalhado."""
+    async def _async_wrapper():
+        async with AsyncSessionLocal() as db:
+            return await ConsultaRepository.verificar_conflito_detalhado(
+                db, aluno_id, paciente_id, data_hora
+            )
+    
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    return loop.run_until_complete(_async_wrapper())
+
+
 def salvar_sync(atendimento: Atendimento) -> Atendimento:
     """Versão síncrona de salvar."""
     async def _async_wrapper():
@@ -225,6 +329,26 @@ def verificar_paciente_tem_agendamento_no_dia_sync(
         async with AsyncSessionLocal() as db:
             return await ConsultaRepository.verificar_paciente_tem_agendamento_no_dia(
                 db, paciente_id, data
+            )
+    
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    return loop.run_until_complete(_async_wrapper())
+
+
+def listar_horarios_ocupados_por_aluno_sync(
+    aluno_id: int,
+    data: datetime
+) -> list[datetime]:
+    """Versão síncrona de listar_horarios_ocupados_por_aluno."""
+    async def _async_wrapper():
+        async with AsyncSessionLocal() as db:
+            return await ConsultaRepository.listar_horarios_ocupados_por_aluno(
+                db, aluno_id, data
             )
     
     try:

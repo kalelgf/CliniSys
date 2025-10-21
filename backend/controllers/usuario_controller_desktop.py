@@ -29,6 +29,11 @@ from ..repositories.usuario_repository import (
     change_user_password_sync,
     init_db_and_seed_sync
 )
+from ..repositories.sync_helpers import (
+    update_user_sync_direct,
+    get_user_by_email_sync_direct,
+    get_user_by_id_sync_direct
+)
 
 # Constantes para mensagens
 MSG_ID_INVALIDO = "ID do usuário deve ser um número positivo"
@@ -304,8 +309,8 @@ class UsuarioController:
             if user_id <= 0:
                 raise ValueError(MSG_ID_INVALIDO)
 
-            # Verificar se usuário existe
-            existing_user = get_user_by_id_sync(user_id)
+            # Verificar se usuário existe (acesso direto ao SQLite)
+            existing_user = get_user_by_id_sync_direct(user_id)
             if not existing_user:
                 return {"success": False, "message": MSG_USUARIO_NAO_ENCONTRADO}
 
@@ -315,9 +320,9 @@ class UsuarioController:
 
             if email is not None:
                 UsuarioController.validate_email_format(email)
-                # Verificar se email já está em uso por outro usuário
-                email_user = get_user_by_email_sync(email)
-                if email_user and email_user.id != user_id:
+                # Verificar se email já está em uso por outro usuário (acesso direto ao SQLite)
+                email_user = get_user_by_email_sync_direct(email)
+                if email_user and email_user['id'] != user_id:
                     raise ValueError(f"Email {email} já está em uso por outro usuário")
 
             # Validar tipo de usuário se fornecido
@@ -327,8 +332,8 @@ class UsuarioController:
                 except ValueError:
                     raise ValueError(f"Tipo de usuário '{tipo_usuario}' inválido. Tipos aceitos: {list(TIPOS_USUARIO.keys())}")
 
-            # Atualizar via repository/service
-            updated_user = update_user_sync(user_id, nome=nome, email=email, tipo_usuario=tipo_usuario, **kwargs)
+            # Atualizar via acesso direto ao SQLite (evita problemas de sessão asyncio)
+            updated_user = update_user_sync_direct(user_id, nome=nome, email=email, **kwargs)
             
             if not updated_user:
                 return {"success": False, "message": "Falha ao atualizar usuário"}
@@ -336,13 +341,13 @@ class UsuarioController:
             return {
                 "success": True,
                 "data": {
-                    "id": updated_user.id,
-                    "nome": updated_user.nome,
-                    "email": updated_user.email,
-                    "tipo_usuario": UserFactory.get_user_type(updated_user),
-                    "ativo": updated_user.ativo
+                    "id": updated_user['id'],
+                    "nome": updated_user['nome'],
+                    "email": updated_user['email'],
+                    "tipo_usuario": updated_user['tipo'].lower(),
+                    "ativo": True  # Por padrão, retornar como ativo
                 },
-                "message": f"Usuário '{updated_user.nome}' atualizado com sucesso"
+                "message": f"Usuário '{updated_user['nome']}' atualizado com sucesso"
             }
 
         except ValueError as e:

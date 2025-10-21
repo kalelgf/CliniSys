@@ -104,20 +104,8 @@ class PacienteRepository:
 
 def run_async(coro):
     """Executa função assíncrona de forma síncrona."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # Se o loop já está rodando, executar em uma task separada
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(asyncio.run, coro)
-                return future.result()
-        else:
-            return loop.run_until_complete(coro)
-    except RuntimeError:
-        # Criar novo loop se necessário
-        return asyncio.run(coro)
-
+    # Sempre usar asyncio.run para criar um novo event loop limpo
+    return asyncio.run(coro)
 
 def create_patient_sync(nome: str, cpf: str, data_nascimento: date) -> Paciente:
     """Versão síncrona de create_patient."""
@@ -142,11 +130,23 @@ def list_patients_sync() -> List[Paciente]:
     return run_async(_list())
 
 
-def get_patient_by_id_sync(patient_id: int) -> Optional[Paciente]:
-    """Versão síncrona de get_patient_by_id."""
+def get_patient_by_id_sync(patient_id: int) -> Optional[dict]:
+    """Versão síncrona de get_patient_by_id. Retorna dicionário com dados do paciente."""
     async def _get():
         async with AsyncSessionLocal() as db:
-            return await PacienteRepository.get_by_id(db, patient_id)
+            patient = await PacienteRepository.get_by_id(db, patient_id)
+            if patient:
+                # Converter para dicionário para evitar problemas de sessão
+                patient_dict = {
+                    'id': patient.id,
+                    'nome': patient.nome,
+                    'cpf': patient.cpf,
+                    'dataNascimento': patient.dataNascimento,
+                    'statusAtendimento': patient.statusAtendimento,
+                    'clinica_id': patient.clinica_id
+                }
+                return patient_dict
+            return None
     
     return run_async(_get())
 

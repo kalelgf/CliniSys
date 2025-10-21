@@ -220,19 +220,8 @@ class UsuarioRepository:
 
 def run_async(coro):
     """Executa função assíncrona de forma síncrona."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # Se o loop já está rodando, executar em uma task separada
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(asyncio.run, coro)
-                return future.result()
-        else:
-            return loop.run_until_complete(coro)
-    except RuntimeError:
-        # Criar novo loop se necessário
-        return asyncio.run(coro)
+    # Sempre usar asyncio.run para criar um novo event loop limpo
+    return asyncio.run(coro)
 
 
 def create_user_specific_sync(
@@ -278,11 +267,23 @@ def list_users_with_details_sync() -> List[dict]:
     return run_async(_list())
 
 
-def get_user_by_id_sync(user_id: int) -> Optional[UsuarioSistema]:
-    """Versão síncrona de get_user_by_id."""
+def get_user_by_id_sync(user_id: int) -> Optional[dict]:
+    """Versão síncrona de get_user_by_id. Retorna dicionário com dados do usuário."""
     async def _get():
         async with AsyncSessionLocal() as db:
-            return await UsuarioRepository.get_by_id(db, user_id)
+            user = await UsuarioRepository.get_by_id(db, user_id)
+            if user:
+                # Converter para dicionário para evitar problemas de sessão
+                user_dict = {
+                    'id': user.id,
+                    'nome': user.nome,
+                    'cpf': user.cpf,
+                    'email': user.email,
+                    'tipo': user.__class__.__name__,
+                    'clinica_id': getattr(user, 'clinica_id', None)
+                }
+                return user_dict
+            return None
     
     return run_async(_get())
 

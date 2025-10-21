@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .professor import Professor
     from .aluno import Aluno
     from .departamento import Departamento
+    from .paciente import Paciente
 
 
 class Clinica(Base):
@@ -24,6 +25,7 @@ class Clinica(Base):
     alunos: Mapped[List["Aluno"]] = relationship("Aluno", back_populates="clinica")
     professores: Mapped[List["Professor"]] = relationship("Professor", back_populates="clinica")
     departamentos: Mapped[List["Departamento"]] = relationship("Departamento", back_populates="clinica")
+    pacientes: Mapped[List["Paciente"]] = relationship("Paciente", back_populates="clinica")
     
     def __repr__(self):
         return f"<Clinica(id={self.id}, codigo='{self.codigo}', nome='{self.nome}')>"

@@ -10,8 +10,7 @@ from datetime import datetime
 
 from ..models.aluno import Aluno
 from ..models.paciente import Paciente
-from ..repositories.usuario_repository import get_user_by_id_sync
-from ..repositories.paciente_repository import get_patient_by_id_sync
+from ..repositories.sync_helpers import get_user_by_id_sync_direct, get_patient_by_id_sync_direct
 from ..services import agendamento_service
 
 
@@ -88,8 +87,8 @@ class AgendamentoController:
                     }
             
             # 2. Mensagens 3 e 4 da Sequência: Buscar aluno e paciente
-            aluno = get_user_by_id_sync(aluno_id)
-            paciente = get_patient_by_id_sync(paciente_id)
+            aluno = get_user_by_id_sync_direct(aluno_id)
+            paciente = get_patient_by_id_sync_direct(paciente_id)
             
             # Validar se foram encontrados
             if not aluno:
@@ -107,34 +106,44 @@ class AgendamentoController:
                 }
             
             # Validar se o usuário é realmente um aluno
-            if not isinstance(aluno, Aluno):
+            if aluno.get('tipo', '').lower() != 'aluno':
                 return {
                     "success": False,
                     "message": "Usuário não é um aluno.",
                     "data": {}
                 }
             
+            # Extrair dados (agora são dicionários, não precisa extrair)
+            aluno_nome = aluno['nome']
+            paciente_nome = paciente['nome']
+            
             # 3. Mensagem 5 da Sequência: Chamar serviço para criar atendimento
-            # O serviço já faz todas as validações de regras de negócio
+            # Passar apenas IDs para evitar problemas de sessão
             atendimento = agendamento_service.criar_atendimento(
-                aluno=aluno,
-                paciente=paciente,
+                aluno_id=aluno_id,
+                paciente_id=paciente_id,
                 data_hora=data_hora,
                 tipo=tipo,
                 status=status
             )
+            
+            # Extrair dados do atendimento salvo
+            atendimento_id = atendimento.id
+            atendimento_data_hora = atendimento.dataHora.strftime("%d/%m/%Y %H:%M")
+            atendimento_tipo = atendimento.tipo
+            atendimento_status = atendimento.status
             
             # 4. Retornar sucesso
             return {
                 "success": True,
                 "message": "Atendimento agendado com sucesso!",
                 "data": {
-                    "atendimento_id": atendimento.id,
-                    "aluno_nome": aluno.nome,
-                    "paciente_nome": paciente.nome,
-                    "data_hora": atendimento.dataHora.strftime("%d/%m/%Y %H:%M"),
-                    "tipo": atendimento.tipo,
-                    "status": atendimento.status
+                    "atendimento_id": atendimento_id,
+                    "aluno_nome": aluno_nome,
+                    "paciente_nome": paciente_nome,
+                    "data_hora": atendimento_data_hora,
+                    "tipo": atendimento_tipo,
+                    "status": atendimento_status
                 }
             }
         
@@ -147,12 +156,14 @@ class AgendamentoController:
             }
 
     @staticmethod
-    def listar_horarios_disponiveis(data_str: str) -> dict:
+    def listar_horarios_disponiveis(data_str: str, aluno_id: Optional[int] = None) -> dict:
         """
         Lista horários disponíveis para uma determinada data.
+        Se aluno_id for fornecido, filtra horários já ocupados por aquele aluno.
         
         Args:
             data_str: Data no formato DD/MM/AAAA
+            aluno_id: ID do aluno (opcional) para filtrar horários ocupados
         
         Returns:
             dict: {"success": bool, "message": str, "data": list}
@@ -163,7 +174,7 @@ class AgendamentoController:
             data = datetime(int(ano), int(mes), int(dia))
             
             # Obter horários disponíveis
-            horarios = agendamento_service.listar_horarios_disponiveis(data)
+            horarios = agendamento_service.listar_horarios_disponiveis(data, aluno_id)
             
             if not horarios:
                 return {
@@ -203,7 +214,7 @@ class AgendamentoController:
             dict: {"success": bool, "message": str, "data": dict}
         """
         try:
-            paciente = get_patient_by_id_sync(paciente_id)
+            paciente = get_patient_by_id_sync_direct(paciente_id)
             
             if not paciente:
                 return {
@@ -216,11 +227,11 @@ class AgendamentoController:
                 "success": True,
                 "message": "Dados do paciente obtidos com sucesso.",
                 "data": {
-                    "id": paciente.id,
-                    "nome": paciente.nome,
-                    "cpf": paciente.cpf,
-                    "data_nascimento": paciente.dataNascimento.strftime("%d/%m/%Y"),
-                    "status_atendimento": paciente.statusAtendimento
+                    "id": paciente['id'],
+                    "nome": paciente['nome'],
+                    "cpf": paciente['cpf'],
+                    "data_nascimento": paciente['dataNascimento'].strftime("%d/%m/%Y"),
+                    "status_atendimento": paciente['statusAtendimento']
                 }
             }
         
