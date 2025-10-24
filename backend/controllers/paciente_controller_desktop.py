@@ -128,15 +128,13 @@ class PacienteController:
             if not patient:
                 return {"success": False, "message": MSG_PACIENTE_NAO_ENCONTRADO}
 
+            # patient já é um dicionário retornado por get_patient_by_id_sync
+            patient['data_nascimento'] = patient['dataNascimento'].isoformat()
+            patient['status_atendimento'] = patient['statusAtendimento']
+            
             return {
                 "success": True,
-                "data": {
-                    "id": patient.id,
-                    "nome": patient.nome,
-                    "cpf": patient.cpf,
-                    "data_nascimento": patient.dataNascimento.isoformat(),
-                    "status_atendimento": patient.statusAtendimento
-                },
+                "data": patient,
                 "message": "Paciente encontrado"
             }
 

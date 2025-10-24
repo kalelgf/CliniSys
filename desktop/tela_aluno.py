@@ -184,7 +184,9 @@ class TelaAluno:
                 self.tree.delete(item)
             
             # Carregar do banco
-            self.pacientes = list_patients_sync()
+            # Mostrar apenas pacientes que já foram triados (status diferente de 'Aguardando Triagem')
+            all_pacientes = list_patients_sync()
+            self.pacientes = [p for p in all_pacientes if getattr(p, 'statusAtendimento', '') != 'Aguardando Triagem']
             
             # Preencher árvore
             for paciente in self.pacientes:
