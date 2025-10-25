@@ -18,6 +18,7 @@ from ..repositories.consulta_repository import (
     verificar_paciente_tem_agendamento_no_dia_sync,
     listar_horarios_ocupados_por_aluno_sync
 )
+from ..repositories.paciente_repository import update_patient_sync
 
 
 # ===================== Validações de Regras de Negócio ===================== #
@@ -215,6 +216,14 @@ def criar_atendimento(
     
     # Salvar no banco
     atendimento_salvo = salvar_sync(novo_atendimento)
+
+    try:
+        update_patient_sync(
+            patient_id=paciente_id,
+            status_atendimento="Agendado"
+        )
+    except Exception as exc:  # pragma: no cover - log para acompanhamento
+        print(f"[WARN] Falha ao atualizar status do paciente {paciente_id}: {exc}")
     
     return atendimento_salvo
 

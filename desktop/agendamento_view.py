@@ -10,7 +10,7 @@ import os
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, Callable
 from tkcalendar import Calendar  # pip install tkcalendar
 
 # Adiciona o backend ao path
@@ -27,7 +27,14 @@ class TelaAgendarAtendimento:
     Segue o Diagrama de Atividades e Diagrama de Sequência.
     """
 
-    def __init__(self, parent, paciente_id: int, aluno_id: int):
+    def __init__(
+        self,
+        parent,
+        paciente_id: int,
+        aluno_id: int,
+        *,
+        on_success: Optional[Callable[[], None]] = None,
+    ):
         """
         Inicializa a tela de agendamento.
         
@@ -50,6 +57,7 @@ class TelaAgendarAtendimento:
         self.paciente_id = paciente_id
         self.aluno_id = aluno_id
         self.paciente_dados = {}
+        self.on_success = on_success
         
         # Widgets
         self.data_selecionada: Optional[date] = None
@@ -355,6 +363,11 @@ class TelaAgendarAtendimento:
                     f"Data/Hora: {resultado['data']['data_hora']}\n"
                     f"Status: {resultado['data']['status']}"
                 )
+                if callable(self.on_success):
+                    try:
+                        self.on_success()
+                    except Exception as callback_exc:  # pragma: no cover
+                        print(f"[WARN] Callback pós-agendamento falhou: {callback_exc}")
                 self.window.destroy()
             else:
                 # Erro: exibir mensagem sem fechar janela

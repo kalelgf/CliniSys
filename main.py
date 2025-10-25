@@ -168,13 +168,8 @@ class CliniSysMain:
         try:
             from desktop.tela_aluno import TelaAluno
             
-            # ID fixo do aluno para teste (você pode alterar conforme necessário)
-            # TODO: Implementar sistema de login para obter o aluno autenticado
-            aluno_id = 2  # matues gomes
-            aluno_nome = "Mateus Gomes"
-            
-            # Abrir tela do aluno
-            TelaAluno(self.root, aluno_id, aluno_nome)
+            # Abrir tela do aluno permitindo a seleção manual do estudante
+            TelaAluno(self.root)
             
         except Exception as e:
             messagebox.showerror(

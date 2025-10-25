@@ -1,5 +1,5 @@
 
-from sqlalchemy import String, Integer, ForeignKey, DateTime
+from sqlalchemy import String, Integer, ForeignKey, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..db.database import Base
 from datetime import datetime
@@ -20,6 +20,8 @@ class Atendimento(Base):
     dataHora: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False)
     tipo: Mapped[str] = mapped_column(String(100), nullable=False)
+    procedimentosRealizados: Mapped[str | None] = mapped_column(Text, nullable=True)
+    observacoesPosAtendimento: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     # Relacionamentos
     # Permitir NULL quando aluno for excluído (SET NULL)

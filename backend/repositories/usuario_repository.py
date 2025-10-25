@@ -97,6 +97,20 @@ class UsuarioRepository:
         return list(result.scalars().all())
 
     @staticmethod
+    async def list_alunos(
+        db: AsyncSession,
+        *,
+        apenas_ativos: bool = True
+    ) -> List[Aluno]:
+        """Lista alunos (opcionalmente apenas os ativos)."""
+        stmt = select(Aluno)
+        if apenas_ativos:
+            stmt = stmt.where(Aluno.ativo.is_(True))
+        stmt = stmt.order_by(Aluno.nome.asc())
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+
+    @staticmethod
     async def list_all_with_details(db: AsyncSession) -> List[dict]:
         """Lista todos os usuários com detalhes específicos por tipo - estrutura CliniSys original."""
         from ..models.aluno import Aluno
@@ -264,6 +278,26 @@ def list_users_with_details_sync() -> List[dict]:
         async with AsyncSessionLocal() as db:
             return await UsuarioRepository.list_all_with_details(db)
     
+    return run_async(_list())
+
+
+def list_alunos_sync(apenas_ativos: bool = True) -> List[dict]:
+    """Versão síncrona de list_alunos."""
+
+    async def _list():
+        async with AsyncSessionLocal() as db:
+            alunos = await UsuarioRepository.list_alunos(db, apenas_ativos=apenas_ativos)
+            return [
+                {
+                    "id": aluno.id,
+                    "nome": aluno.nome,
+                    "matricula": getattr(aluno, "matricula", None),
+                    "cpf": aluno.cpf,
+                    "clinica_id": getattr(aluno, "clinica_id", None),
+                }
+                for aluno in alunos
+            ]
+
     return run_async(_list())
 
 

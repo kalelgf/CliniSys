@@ -60,6 +60,8 @@ def create_triagem(dados: Dict[str, Any]) -> int:
             )
         )
         triagem_id = cur.lastrowid
+        if triagem_id is None:
+            raise RuntimeError("Falha ao recuperar identificador da triagem recém-criada.")
 
         # Atualizar status do paciente
         cur.execute(
@@ -68,7 +70,7 @@ def create_triagem(dados: Dict[str, Any]) -> int:
         )
         
         db.commit()
-        return triagem_id
+        return int(triagem_id)
 
     except Exception as e:
         db.rollback()
@@ -100,6 +102,7 @@ def get_triagem_by_paciente(paciente_id: int) -> Optional[Dict[str, Any]]:
 
 def list_triagens_pendentes() -> List[Dict[str, Any]]:
     """Lista pacientes aguardando triagem."""
+    ensure_triagem_table()
     db = get_db_sync()
     db.row_factory = sqlite3.Row
     cur = db.cursor()
@@ -118,6 +121,7 @@ def list_triagens_pendentes() -> List[Dict[str, Any]]:
 
 def list_triagens_realizadas() -> List[Dict[str, Any]]:
     """Lista pacientes já triados com suas últimas triagens."""
+    ensure_triagem_table()
     db = get_db_sync()
     db.row_factory = sqlite3.Row
     cur = db.cursor()

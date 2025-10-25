@@ -171,6 +171,61 @@ class ConsultaRepository:
         return list(result.scalars().all())
 
     @staticmethod
+    async def listar_agendados_por_aluno(db: AsyncSession, aluno_id: int) -> list[Atendimento]:
+        """Lista atendimentos com status 'Agendado' para um aluno."""
+        stmt = (
+            select(Atendimento)
+            .where(
+                and_(
+                    Atendimento.aluno_id == aluno_id,
+                    Atendimento.status == "Agendado"
+                )
+            )
+            .order_by(Atendimento.dataHora.asc())
+        )
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def listar_concluidos_por_aluno(db: AsyncSession, aluno_id: int) -> list[Atendimento]:
+        """Lista atendimentos concluídos para um aluno."""
+        stmt = (
+            select(Atendimento)
+            .where(
+                and_(
+                    Atendimento.aluno_id == aluno_id,
+                    Atendimento.status == "Concluído"
+                )
+            )
+            .order_by(Atendimento.dataHora.desc())
+        )
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def registrar_procedimentos(
+        db: AsyncSession,
+        atendimento_id: int,
+        procedimentos: str,
+        observacoes: str | None
+    ) -> Atendimento | None:
+        """Atualiza os dados de procedimentos realizados em um atendimento."""
+        stmt = select(Atendimento).where(Atendimento.id == atendimento_id)
+        result = await db.execute(stmt)
+        atendimento = result.scalar_one_or_none()
+
+        if atendimento is None:
+            return None
+
+        atendimento.procedimentosRealizados = procedimentos
+        atendimento.observacoesPosAtendimento = observacoes
+        atendimento.status = "Concluído"
+
+        await db.commit()
+        await db.refresh(atendimento)
+        return atendimento
+
+    @staticmethod
     async def verificar_paciente_tem_agendamento_no_dia(
         db: AsyncSession,
         paciente_id: int,
@@ -357,4 +412,58 @@ def listar_horarios_ocupados_por_aluno_sync(
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
     
+    return loop.run_until_complete(_async_wrapper())
+
+
+def listar_agendados_por_aluno_sync(aluno_id: int) -> list[Atendimento]:
+    """Versão síncrona de listar_agendados_por_aluno."""
+    async def _async_wrapper():
+        async with AsyncSessionLocal() as db:
+            return await ConsultaRepository.listar_agendados_por_aluno(db, aluno_id)
+
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    return loop.run_until_complete(_async_wrapper())
+
+
+def listar_concluidos_por_aluno_sync(aluno_id: int) -> list[Atendimento]:
+    """Versão síncrona de listar_concluidos_por_aluno."""
+    async def _async_wrapper():
+        async with AsyncSessionLocal() as db:
+            return await ConsultaRepository.listar_concluidos_por_aluno(db, aluno_id)
+
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    return loop.run_until_complete(_async_wrapper())
+
+
+def registrar_procedimentos_sync(
+    atendimento_id: int,
+    procedimentos: str,
+    observacoes: str | None
+) -> Atendimento | None:
+    """Versão síncrona de registrar_procedimentos."""
+    async def _async_wrapper():
+        async with AsyncSessionLocal() as db:
+            return await ConsultaRepository.registrar_procedimentos(
+                db,
+                atendimento_id,
+                procedimentos,
+                observacoes
+            )
+
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     return loop.run_until_complete(_async_wrapper())
