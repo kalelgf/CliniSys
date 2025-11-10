@@ -122,22 +122,7 @@ def criar_atendimento(
     tipo: str = "Consulta Odontológica",
     status: str = "Agendado"
 ) -> Atendimento:
-    """
-    Cria um novo atendimento após validar todas as regras de negócio.
-    
-    Args:
-        aluno_id: ID do aluno que realizará o atendimento
-        paciente_id: ID do paciente a ser atendido
-        data_hora: Data e hora do atendimento
-        tipo: Tipo do atendimento (padrão: "Consulta Odontológica")
-        status: Status inicial (padrão: "Agendado")
-    
-    Returns:
-        Atendimento criado e salvo no banco
-    
-    Raises:
-        Exception: Se alguma regra de negócio for violada
-    """
+
     
     # Buscar aluno e paciente para validações (usar funções síncronas diretas)
     from ..repositories.sync_helpers import get_user_by_id_sync_direct, get_patient_by_id_sync_direct

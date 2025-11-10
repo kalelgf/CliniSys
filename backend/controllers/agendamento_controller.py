@@ -15,27 +15,11 @@ from ..services import agendamento_service
 
 
 class AgendamentoController:
-    """
-    Controller para operações de agendamento de atendimentos.
-    Segue o padrão MVC e retorna respostas padronizadas.
-    """
+
 
     @staticmethod
     def agendar_novo_atendimento(dados: dict) -> dict:
-        """
-        Agenda um novo atendimento seguindo o Diagrama de Sequência.
-        
-        Args:
-            dados: Dicionário contendo:
-                - paciente_id: int
-                - aluno_id: int
-                - data_hora: datetime ou dict com 'data' e 'horario'
-                - tipo: str (opcional, padrão: "Consulta Odontológica")
-                - status: str (opcional, padrão: "Agendado")
-        
-        Returns:
-            dict: {"success": bool, "message": str, "data": dict}
-        """
+
         try:
             # 1. Extrair dados do dicionário
             paciente_id = dados.get("paciente_id")
@@ -117,7 +101,7 @@ class AgendamentoController:
             aluno_nome = aluno['nome']
             paciente_nome = paciente['nome']
             
-            # 3. Mensagem 5 da Sequência: Chamar serviço para criar atendimento
+            
             # Passar apenas IDs para evitar problemas de sessão
             atendimento = agendamento_service.criar_atendimento(
                 aluno_id=aluno_id,
@@ -157,17 +141,7 @@ class AgendamentoController:
 
     @staticmethod
     def listar_horarios_disponiveis(data_str: str, aluno_id: Optional[int] = None) -> dict:
-        """
-        Lista horários disponíveis para uma determinada data.
-        Se aluno_id for fornecido, filtra horários já ocupados por aquele aluno.
-        
-        Args:
-            data_str: Data no formato DD/MM/AAAA
-            aluno_id: ID do aluno (opcional) para filtrar horários ocupados
-        
-        Returns:
-            dict: {"success": bool, "message": str, "data": list}
-        """
+
         try:
             # Converter string para datetime
             dia, mes, ano = data_str.split('/')
@@ -204,15 +178,7 @@ class AgendamentoController:
 
     @staticmethod
     def obter_dados_paciente(paciente_id: int) -> dict:
-        """
-        Obtém dados básicos do paciente para exibição.
-        
-        Args:
-            paciente_id: ID do paciente
-        
-        Returns:
-            dict: {"success": bool, "message": str, "data": dict}
-        """
+
         try:
             paciente = get_patient_by_id_sync_direct(paciente_id)
             

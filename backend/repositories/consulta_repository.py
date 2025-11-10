@@ -18,10 +18,7 @@ from ..db.database import AsyncSessionLocal
 
 
 class ConsultaRepository:
-    """
-    Repository para acesso aos dados de atendimentos/consultas.
-    Responsável apenas por operações CRUD sem validações de negócio.
-    """
+
 
     @staticmethod
     async def verificar_disponibilidade(
@@ -30,10 +27,7 @@ class ConsultaRepository:
         paciente_id: int,
         data_hora: datetime
     ) -> bool:
-        """
-        Verifica se o horário está disponível para o aluno E para o paciente.
-        Retorna True se disponível, False se houver conflito.
-        """
+
         # Consulta para verificar se já existe atendimento no mesmo horário
         # para o aluno OU para o paciente
         stmt = select(func.count(Atendimento.id)).where(
@@ -59,16 +53,8 @@ class ConsultaRepository:
         paciente_id: int,
         data_hora: datetime
     ) -> dict:
-        """
-        Verifica conflitos de horário e retorna informações detalhadas.
         
-        Returns:
-            dict com:
-                - disponivel: bool
-                - conflito_aluno: bool
-                - conflito_paciente: bool
-                - mensagem: str (descrição do conflito)
-        """
+
         # Verificar conflito do aluno
         stmt_aluno = select(func.count(Atendimento.id)).where(
             and_(
